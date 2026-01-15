@@ -14,5 +14,5 @@ dist/
 .idea/
 .vscode/
 
-# Output files (optional - keep if you want to track outputs)
-# outputs/
+# Output files
+outputs/
