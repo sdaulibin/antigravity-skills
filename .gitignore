@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment files
+.env
+
+# OS files
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Output files (optional - keep if you want to track outputs)
+# outputs/
