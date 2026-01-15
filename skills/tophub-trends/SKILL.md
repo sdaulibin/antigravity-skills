@@ -9,7 +9,7 @@ description: 获取并分析 TopHub 热榜数据，提供内容创作灵感。
 
 ## 功能描述
 
-1. **Fetch Hot List**: 使用 Puppeteer 抓取 TopHub 首页的实时热榜数据
+1. **Fetch Hot List**: 抓取 TopHub 首页的实时热榜数据
 2. **Analyze Trends**: 分析前 30 个热点，识别高流量潜力话题
 3. **Generate Report**: 生成包含选题建议的 Markdown 报告
 
@@ -37,7 +37,7 @@ npm run skill:trends
 
 ## 依赖配置
 
-确保已安装 Node.js 18+，Puppeteer 会自动下载 Chromium 浏览器。
+确保已安装 Node.js 18+。
 
 可选配置 `.env` 文件：
 
