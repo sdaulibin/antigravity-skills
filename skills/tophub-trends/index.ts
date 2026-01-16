@@ -30,7 +30,6 @@ const OUTPUT_DIR = path.resolve(__dirname, '../../outputs/trends');
 function ensureOutputDir(): void {
   if (!fs.existsSync(OUTPUT_DIR)) {
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-    console.log(`📁 创建输出目录: ${OUTPUT_DIR}`);
   }
 }
 
@@ -40,85 +39,104 @@ function ensureOutputDir(): void {
 function saveFile(filename: string, content: string): string {
   const filepath = path.join(OUTPUT_DIR, filename);
   fs.writeFileSync(filepath, content, 'utf-8');
-  console.log(`💾 文件已保存: ${filepath}`);
   return filepath;
 }
 
 /**
- * 主函数
+ * 执行抓取和分析流程
  */
-async function main(): Promise<void> {
-  console.log('');
-  console.log('═══════════════════════════════════════════');
-  console.log('   🔥 TopHub Trends Analysis Skill');
-  console.log('═══════════════════════════════════════════');
-  console.log('');
+export async function runTrendsAnalysis(options: { 
+  useAI?: boolean, 
+  saveFiles?: boolean,
+  outputJson?: boolean 
+} = {}) {
+  const { useAI = false, saveFiles = true, outputJson = false } = options;
 
   try {
-    // 确保输出目录存在
-    ensureOutputDir();
-
     // Step 1: 抓取热榜数据
-    console.log('📡 Step 1: 抓取热榜数据...\n');
     const scrapeResult = await scrapeTophubTrends();
     
-    // 生成时间戳用于文件名
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    
-    // 保存原始数据
-    const jsonFilename = `tophub_hot_${timestamp}.json`;
-    saveFile(jsonFilename, JSON.stringify(scrapeResult, null, 2));
-    
-    // Step 2: 分析数据
-    console.log('\n📊 Step 2: 分析热点数据...\n');
+    // Step 2: 基础分析
     const analysisResult = analyzeTrends(scrapeResult);
     
-    // Step 3: AI 智能分析 (如果配置了 API Key)
+    let aiResult = null;
     let aiSection = '';
-    if (process.env.GEMINI_API_KEY) {
-      console.log('\n🤖 Step 3: Gemini AI 智能分析...\n');
-      const aiResult = await analyzeWithGemini(analysisResult.top30);
+
+    // Step 3: AI 智能分析 (如果明确要求且有 Key)
+    if (useAI && process.env.GEMINI_API_KEY) {
+      aiResult = await analyzeWithGemini(analysisResult.top30);
       if (aiResult) {
         aiSection = generateAIReportSection(aiResult);
       }
-    } else {
-      console.log('\n💡 提示: 配置 GEMINI_API_KEY 可启用 AI 智能分析\n');
     }
     
     // Step 4: 生成报告
-    console.log('\n📝 Step 4: 生成分析报告...\n');
     let report = generateReport(analysisResult);
-    
-    // 如果有 AI 分析结果，追加到报告
     if (aiSection) {
       report += aiSection;
     }
     
-    // 保存报告
-    const mdFilename = `tophub_analysis_${timestamp}.md`;
-    const reportPath = saveFile(mdFilename, report);
-    
-    // 完成
-    console.log('');
-    console.log('═══════════════════════════════════════════');
-    console.log('   ✅ 任务完成!');
-    console.log('═══════════════════════════════════════════');
-    console.log('');
-    console.log(`📊 分析了 ${scrapeResult.items.length} 条热点数据`);
-    console.log(`🎯 精选了 Top ${analysisResult.top30.length} 热点`);
-    if (aiSection) {
-      console.log(`🤖 已生成 AI 智能分析`);
+    // Step 5: 输出/保存
+    if (saveFiles) {
+      ensureOutputDir();
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      saveFile(`tophub_hot_${timestamp}.json`, JSON.stringify(scrapeResult, null, 2));
+      saveFile(`tophub_analysis_${timestamp}.md`, report);
     }
-    console.log(`📁 报告已保存到: ${reportPath}`);
-    console.log('');
+
+    const result = {
+      ...analysisResult,
+      aiAnalysis: aiResult,
+      report: report
+    };
+
+    if (outputJson) {
+      console.log(JSON.stringify(result, null, 2));
+    }
+
+    return result;
     
   } catch (error) {
-    console.error('');
     console.error('❌ 执行失败:', error);
-    process.exit(1);
+    throw error;
   }
 }
 
-// 运行
-main();
+/**
+ * CLI 入口
+ */
+async function main(): Promise<void> {
+  const args = process.argv.slice(2);
+  const isJsonMode = args.includes('--json');
+  const skipAI = args.includes('--no-ai');
+  const skipSave = args.includes('--no-save');
+
+  if (!isJsonMode) {
+    console.log('');
+    console.log('═══════════════════════════════════════════');
+    console.log('   🔥 TopHub Trends Analysis Skill');
+    console.log('═══════════════════════════════════════════');
+    console.log('');
+  }
+
+  const result = await runTrendsAnalysis({
+    useAI: !skipAI && !!process.env.GEMINI_API_KEY,
+    saveFiles: !skipSave,
+    outputJson: isJsonMode
+  });
+
+  if (!isJsonMode) {
+    console.log('\n✅ 任务完成!');
+    console.log(`📊 分析了 ${result.top30.length} 条热门趋势`);
+    if (result.aiAnalysis) {
+      console.log(`🤖 已包含 AI 智能建议`);
+    }
+    console.log('');
+  }
+}
+
+// 如果直接运行
+if (require.main === module) {
+  main();
+}
 

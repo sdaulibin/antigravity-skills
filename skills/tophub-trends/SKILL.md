@@ -1,70 +1,50 @@
 ---
 name: tophub-trends
-description: 获取并分析 TopHub 热榜数据，使用 Gemini AI 提供智能内容创作灵感。
+description: 获取并分析 TopHub 热榜数据。在 Agent 模式下，可提供结构化 JSON 数据供 Agent 进行深度分析和创作建议。
 ---
 
 # TopHub Trends Analysis Skill
 
-这个 Skill 用于自动化获取 TopHub 热榜数据，结合 **Google Gemini AI** 进行智能分析，为内容创作者提供选题建议。
+这个 Skill 用于自动化获取 TopHub 热榜数据。它既可以作为独立脚本生成报告，也可以作为 Agent 的工具提供原始数据。
 
-## 功能描述
+## 🤖 Agent 模式使用 (推荐)
 
-1. **Fetch Hot List**: 抓取 TopHub 首页的实时热榜数据
-2. **Analyze Trends**: 分析前 30 个热点，识别高流量潜力话题
-3. **AI Analysis**: 使用 Gemini AI 生成智能创作建议（可选）
-4. **Generate Report**: 生成包含选题建议的 Markdown 报告
-
-## 使用方法
-
-### 安装依赖
+在 Gemini CLI 或其他 Agent 环境中，Agent 应使用以下命令获取数据：
 
 ```bash
-cd /Users/binginx/workspace/antigravity-skills
-npm install
+npm run skill:trends -- --json --no-ai
 ```
 
-### 配置 API Key（可选，启用 AI 分析）
+**输出格式**: 
+返回一个包含 `top30` 热门话题及其 `score`（潜力分）、`category`（分类）和 `heat`（热度）的 JSON 对象。
 
-在项目根目录创建 `.env` 文件：
+**Agent 协作流程**:
+1. Agent 调用该工具获取实时热榜 JSON。
+2. Agent 利用自身大模型能力，结合热榜数据进行深度洞察、跨平台创作建议或舆情分析。
 
-```bash
-# Google Gemini API Key
-GEMINI_API_KEY=your-api-key-here
+## 🚀 独立运行模式
 
-# 可选：指定模型
-GEMINI_MODEL=gemini-2.0-flash
-```
+作为独立工具使用时，它会生成一份完整的 Markdown 报告。
 
 ### 运行脚本
 
 ```bash
+# 生成包含基础分析的报告
 npm run skill:trends
+
+# (可选) 如果配置了 GEMINI_API_KEY，可开启内置 AI 分析
+npm run skill:trends -- --use-ai
 ```
 
-### 输出结果
+### 配置 API Key (仅用于独立模式)
+在项目根目录创建 `.env` 文件：
+```bash
+GEMINI_API_KEY=your-api-key-here
+```
 
-脚本运行后，会在 `outputs/trends/` 目录下生成两个文件：
+## 功能特性
 
-1. `tophub_hot_[timestamp].json`: 原始热榜数据
-2. `tophub_analysis_[timestamp].md`: 热点分析报告（含 AI 分析）
-
-## AI 分析功能
-
-配置 `GEMINI_API_KEY` 后，报告将包含：
-
-- **趋势洞察**: AI 分析热点背后的社会情绪
-- **创作角度**: 5 个独特的内容切入角度
-- **爆款预测**: 最有可能持续发酵的话题
-
-## 依赖配置
-
-确保已安装 Node.js 18+。
-
-可选配置 `.env` 文件：
-
-| 变量             | 说明                  | 默认值             |
-| :--------------- | :-------------------- | :----------------- |
-| `GEMINI_API_KEY` | Google Gemini API Key | -                  |
-| `GEMINI_MODEL`   | 使用的模型            | `gemini-2.0-flash` |
-| `MOCK_MODE`      | 使用模拟数据测试      | `false`            |
-| `SCRAPE_TIMEOUT` | 抓取超时时间（毫秒）  | `30000`            |
+1. **实时抓取**: 获取 TopHub 首页的最新热点。
+2. **多维评分**: 基于热度、来源平台和排名计算话题潜力（0-100分）。
+3. **自动分类**: 自动识别科技、财经、娱乐、社会等领域。
+4. **Agent 友好**: 支持 `--json` 输出，无缝对接大模型工作流。
