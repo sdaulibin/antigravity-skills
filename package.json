@@ -4,7 +4,8 @@
   "description": "Antigravity Agent Skills Collection",
   "main": "index.js",
   "scripts": {
-    "skill:trends": "ts-node skills/tophub-trends/index.ts"
+    "skill:trends": "ts-node skills/tophub-trends/index.ts",
+    "skill:football": "ts-node skills/football-hotspot/index.ts"
   },
   "keywords": [
     "antigravity",
